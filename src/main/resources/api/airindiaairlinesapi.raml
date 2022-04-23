@@ -1,0 +1,58 @@
+#%RAML 1.0
+title: AirIndiaAirlinesapi
+version: v1
+baseUri: http://localhost:8081
+
+/AirIndiaFlights:
+  get:
+    queryParameters:
+      source:
+          example: HYD
+      destination:
+          example: BANG
+      doj:  
+          example: 31-MAR-2022
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              [
+                      {
+                          "ID": "201",
+                          "airline": "AirIndia",
+                          "flightCode": "AI201",
+                          "fromAirportCode": "HYD",
+                          "toAirportCode": "BANG",
+                          "departureDate": "31-MAR-2022",
+                          "emptySeats": "0",
+                          "totalSeats": 200,
+                          "price": "199",
+                          "planeType": "AirIndia 737"
+                      },
+                      {
+                          "ID": "202",
+                          "airline": "AirIndia",
+                          "flightCode": "AI202",
+                          "fromAirportCode": "HYD",
+                          "toAirportCode": "BANG",
+                          "departureDate": "31-MAR-2022",
+                          "emptySeats": "24",
+                          "totalSeats": 350,
+                          "price": "450",
+                          "planeType": "AirIndia 747"
+                      },
+                      {
+                          "ID": "203",
+                          "airline": "AirIndia",
+                          "flightCode": "AI203",
+                          "fromAirportCode": "HYD",
+                          "toAirportCode": "BANG",
+                          "departureDate": "31-MAR-2022",
+                          "emptySeats": "33",
+                          "totalSeats": 400,
+                          "price": "450",
+                          "planeType": "AirIndia 757"
+                      }
+              ]
+            

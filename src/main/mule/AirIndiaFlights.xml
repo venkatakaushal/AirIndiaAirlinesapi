@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="25e3085f-2338-461a-bf71-165fc33dc14d" >
+		<wsc:connection wsdlLocation="${airindia.wsdl}" service="${airindia.service}" port="${airindia.port}" address="${airindia.address}" />
+	</wsc:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="0d884f4f-f642-43dc-bf70-96a079e6863d" file="AirIndiaAirlinesapi-DEV.properties" />
+	<flow name="AirIndiaFlightsFlow" doc:id="a0f8e2c8-292b-4fa2-80d4-95a1be5ec01e" >
+		<logger level="INFO" doc:name="Logger" doc:id="86863d00-8ad8-4d87-af16-cf938ab5e844" message="REQUEST RECEVIED BY AIRINDIAFLIGHTS FLOW..........#[attributes.queryParams]"/>
+		<ee:transform doc:name="Transform Message" doc:id="20b4aad7-a8c4-4b11-92a9-6e7963dd35c7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://soap.training.mulesoft.com/
+---
+{
+	ns0#getFlights: {
+		from: attributes.queryParams.source as String,
+		to:   attributes.queryParams.destination as String,
+		depatureDate: attributes.queryParams.doj as String
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c052ae15-00cb-4db7-99c5-f0f7bd24750d" message="data sending to target system(web service consumer)............#[payload]"/>
+		<wsc:consume operation="getFlights" doc:name="Consume" doc:id="ab703ed4-848a-4092-b437-002aa73cce30" config-ref="Web_Service_Consumer_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a33a5b29-0079-4b17-84b8-1b4976b3fe92" message="data recevied from target system....................#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="1249d6f7-d684-4f18-a849-aa5ba666668c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://soap.training.mulesoft.com/
+---
+payload.body.ns0#getFlightsResponse.*return map ( return , indexOfReturn ) -> {
+	ID: return.ID as String,
+	airline: return.airline,
+	flightCode: return.flightCode,
+	fromAirportCode: return.fromAirportCode,
+	toAirportCode: return.toAirportCode,
+	departureDate: return.departureDate,
+	emptySeats: return.emptySeats as String,
+	totalSeats: return.totalSeats as Number,
+	price: return.price as String,
+	planeType: return.planeType
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="cc2be3fe-4eb1-4ef9-8087-54d05d4b5c41" message="final response from airindia.........#[payload]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="98e8b392-27a8-40fb-938a-b1d45f941834" type="WSC:CONNECTIVITY">
+				<ee:transform doc:name="Transform Message" doc:id="d09d20b9-db4c-41bc-a396-649085365a93" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	statuscode:500,
+	message:"unable to connect to the server"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
